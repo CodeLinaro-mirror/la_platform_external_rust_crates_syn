@@ -3,10 +3,6 @@ use crate::derive::{Data, DataEnum, DataStruct, DataUnion, DeriveInput};
 use crate::punctuated::Punctuated;
 use proc_macro2::TokenStream;
 
-#[cfg(feature = "extra-traits")]
-use crate::tt::TokenStreamHelper;
-#[cfg(feature = "extra-traits")]
-use std::hash::{Hash, Hasher};
 #[cfg(feature = "parsing")]
 use std::mem;
 
@@ -23,7 +19,7 @@ ast_enum_of_structs! {
     //
     // TODO: change syntax-tree-enum link to an intra rustdoc link, currently
     // blocked on https://github.com/rust-lang/rust/issues/62833
-    pub enum Item #manual_extra_traits {
+    pub enum Item {
         /// A constant item: `const MAX: u16 = 65535`.
         Const(ItemConst),
 
@@ -191,7 +187,7 @@ ast_struct! {
     /// A 2.0-style declarative macro introduced by the `macro` keyword.
     ///
     /// *This type is available only if Syn is built with the `"full"` feature.*
-    pub struct ItemMacro2 #manual_extra_traits {
+    pub struct ItemMacro2 {
         pub attrs: Vec<Attribute>,
         pub vis: Visibility,
         pub macro_token: Token![macro],
@@ -326,117 +322,6 @@ ast_struct! {
     }
 }
 
-#[cfg(feature = "extra-traits")]
-impl Eq for Item {}
-
-#[cfg(feature = "extra-traits")]
-impl PartialEq for Item {
-    fn eq(&self, other: &Self) -> bool {
-        match (self, other) {
-            (Item::Const(this), Item::Const(other)) => this == other,
-            (Item::Enum(this), Item::Enum(other)) => this == other,
-            (Item::ExternCrate(this), Item::ExternCrate(other)) => this == other,
-            (Item::Fn(this), Item::Fn(other)) => this == other,
-            (Item::ForeignMod(this), Item::ForeignMod(other)) => this == other,
-            (Item::Impl(this), Item::Impl(other)) => this == other,
-            (Item::Macro(this), Item::Macro(other)) => this == other,
-            (Item::Macro2(this), Item::Macro2(other)) => this == other,
-            (Item::Mod(this), Item::Mod(other)) => this == other,
-            (Item::Static(this), Item::Static(other)) => this == other,
-            (Item::Struct(this), Item::Struct(other)) => this == other,
-            (Item::Trait(this), Item::Trait(other)) => this == other,
-            (Item::TraitAlias(this), Item::TraitAlias(other)) => this == other,
-            (Item::Type(this), Item::Type(other)) => this == other,
-            (Item::Union(this), Item::Union(other)) => this == other,
-            (Item::Use(this), Item::Use(other)) => this == other,
-            (Item::Verbatim(this), Item::Verbatim(other)) => {
-                TokenStreamHelper(this) == TokenStreamHelper(other)
-            }
-            _ => false,
-        }
-    }
-}
-
-#[cfg(feature = "extra-traits")]
-impl Hash for Item {
-    fn hash<H>(&self, state: &mut H)
-    where
-        H: Hasher,
-    {
-        match self {
-            Item::Const(item) => {
-                state.write_u8(0);
-                item.hash(state);
-            }
-            Item::Enum(item) => {
-                state.write_u8(1);
-                item.hash(state);
-            }
-            Item::ExternCrate(item) => {
-                state.write_u8(2);
-                item.hash(state);
-            }
-            Item::Fn(item) => {
-                state.write_u8(3);
-                item.hash(state);
-            }
-            Item::ForeignMod(item) => {
-                state.write_u8(4);
-                item.hash(state);
-            }
-            Item::Impl(item) => {
-                state.write_u8(5);
-                item.hash(state);
-            }
-            Item::Macro(item) => {
-                state.write_u8(6);
-                item.hash(state);
-            }
-            Item::Macro2(item) => {
-                state.write_u8(7);
-                item.hash(state);
-            }
-            Item::Mod(item) => {
-                state.write_u8(8);
-                item.hash(state);
-            }
-            Item::Static(item) => {
-                state.write_u8(9);
-                item.hash(state);
-            }
-            Item::Struct(item) => {
-                state.write_u8(10);
-                item.hash(state);
-            }
-            Item::Trait(item) => {
-                state.write_u8(11);
-                item.hash(state);
-            }
-            Item::TraitAlias(item) => {
-                state.write_u8(12);
-                item.hash(state);
-            }
-            Item::Type(item) => {
-                state.write_u8(13);
-                item.hash(state);
-            }
-            Item::Union(item) => {
-                state.write_u8(14);
-                item.hash(state);
-            }
-            Item::Use(item) => {
-                state.write_u8(15);
-                item.hash(state);
-            }
-            Item::Verbatim(item) => {
-                state.write_u8(16);
-                TokenStreamHelper(item).hash(state);
-            }
-            Item::__Nonexhaustive => unreachable!(),
-        }
-    }
-}
-
 impl Item {
     #[cfg(feature = "parsing")]
     pub(crate) fn replace_attrs(&mut self, new: Vec<Attribute>) -> Vec<Attribute> {
@@ -460,34 +345,6 @@ impl Item {
             Item::Verbatim(_) => Vec::new(),
             Item::__Nonexhaustive => unreachable!(),
         }
-    }
-}
-
-#[cfg(feature = "extra-traits")]
-impl Eq for ItemMacro2 {}
-
-#[cfg(feature = "extra-traits")]
-impl PartialEq for ItemMacro2 {
-    fn eq(&self, other: &Self) -> bool {
-        self.attrs == other.attrs
-            && self.vis == other.vis
-            && self.macro_token == other.macro_token
-            && self.ident == other.ident
-            && TokenStreamHelper(&self.rules) == TokenStreamHelper(&other.rules)
-    }
-}
-
-#[cfg(feature = "extra-traits")]
-impl Hash for ItemMacro2 {
-    fn hash<H>(&self, state: &mut H)
-    where
-        H: Hasher,
-    {
-        self.attrs.hash(state);
-        self.vis.hash(state);
-        self.macro_token.hash(state);
-        self.ident.hash(state);
-        TokenStreamHelper(&self.rules).hash(state);
     }
 }
 
@@ -665,7 +522,7 @@ ast_enum_of_structs! {
     //
     // TODO: change syntax-tree-enum link to an intra rustdoc link, currently
     // blocked on https://github.com/rust-lang/rust/issues/62833
-    pub enum ForeignItem #manual_extra_traits {
+    pub enum ForeignItem {
         /// A foreign function in an `extern` block.
         Fn(ForeignItemFn),
 
@@ -738,57 +595,6 @@ ast_struct! {
     }
 }
 
-#[cfg(feature = "extra-traits")]
-impl Eq for ForeignItem {}
-
-#[cfg(feature = "extra-traits")]
-impl PartialEq for ForeignItem {
-    fn eq(&self, other: &Self) -> bool {
-        match (self, other) {
-            (ForeignItem::Fn(this), ForeignItem::Fn(other)) => this == other,
-            (ForeignItem::Static(this), ForeignItem::Static(other)) => this == other,
-            (ForeignItem::Type(this), ForeignItem::Type(other)) => this == other,
-            (ForeignItem::Macro(this), ForeignItem::Macro(other)) => this == other,
-            (ForeignItem::Verbatim(this), ForeignItem::Verbatim(other)) => {
-                TokenStreamHelper(this) == TokenStreamHelper(other)
-            }
-            _ => false,
-        }
-    }
-}
-
-#[cfg(feature = "extra-traits")]
-impl Hash for ForeignItem {
-    fn hash<H>(&self, state: &mut H)
-    where
-        H: Hasher,
-    {
-        match self {
-            ForeignItem::Fn(item) => {
-                state.write_u8(0);
-                item.hash(state);
-            }
-            ForeignItem::Static(item) => {
-                state.write_u8(1);
-                item.hash(state);
-            }
-            ForeignItem::Type(item) => {
-                state.write_u8(2);
-                item.hash(state);
-            }
-            ForeignItem::Macro(item) => {
-                state.write_u8(3);
-                item.hash(state);
-            }
-            ForeignItem::Verbatim(item) => {
-                state.write_u8(4);
-                TokenStreamHelper(item).hash(state);
-            }
-            ForeignItem::__Nonexhaustive => unreachable!(),
-        }
-    }
-}
-
 ast_enum_of_structs! {
     /// An item declaration within the definition of a trait.
     ///
@@ -802,7 +608,7 @@ ast_enum_of_structs! {
     //
     // TODO: change syntax-tree-enum link to an intra rustdoc link, currently
     // blocked on https://github.com/rust-lang/rust/issues/62833
-    pub enum TraitItem #manual_extra_traits {
+    pub enum TraitItem {
         /// An associated constant within the definition of a trait.
         Const(TraitItemConst),
 
@@ -877,57 +683,6 @@ ast_struct! {
     }
 }
 
-#[cfg(feature = "extra-traits")]
-impl Eq for TraitItem {}
-
-#[cfg(feature = "extra-traits")]
-impl PartialEq for TraitItem {
-    fn eq(&self, other: &Self) -> bool {
-        match (self, other) {
-            (TraitItem::Const(this), TraitItem::Const(other)) => this == other,
-            (TraitItem::Method(this), TraitItem::Method(other)) => this == other,
-            (TraitItem::Type(this), TraitItem::Type(other)) => this == other,
-            (TraitItem::Macro(this), TraitItem::Macro(other)) => this == other,
-            (TraitItem::Verbatim(this), TraitItem::Verbatim(other)) => {
-                TokenStreamHelper(this) == TokenStreamHelper(other)
-            }
-            _ => false,
-        }
-    }
-}
-
-#[cfg(feature = "extra-traits")]
-impl Hash for TraitItem {
-    fn hash<H>(&self, state: &mut H)
-    where
-        H: Hasher,
-    {
-        match self {
-            TraitItem::Const(item) => {
-                state.write_u8(0);
-                item.hash(state);
-            }
-            TraitItem::Method(item) => {
-                state.write_u8(1);
-                item.hash(state);
-            }
-            TraitItem::Type(item) => {
-                state.write_u8(2);
-                item.hash(state);
-            }
-            TraitItem::Macro(item) => {
-                state.write_u8(3);
-                item.hash(state);
-            }
-            TraitItem::Verbatim(item) => {
-                state.write_u8(4);
-                TokenStreamHelper(item).hash(state);
-            }
-            TraitItem::__Nonexhaustive => unreachable!(),
-        }
-    }
-}
-
 ast_enum_of_structs! {
     /// An item within an impl block.
     ///
@@ -941,7 +696,7 @@ ast_enum_of_structs! {
     //
     // TODO: change syntax-tree-enum link to an intra rustdoc link, currently
     // blocked on https://github.com/rust-lang/rust/issues/62833
-    pub enum ImplItem #manual_extra_traits {
+    pub enum ImplItem {
         /// An associated constant within an impl block.
         Const(ImplItemConst),
 
@@ -1018,57 +773,6 @@ ast_struct! {
         pub attrs: Vec<Attribute>,
         pub mac: Macro,
         pub semi_token: Option<Token![;]>,
-    }
-}
-
-#[cfg(feature = "extra-traits")]
-impl Eq for ImplItem {}
-
-#[cfg(feature = "extra-traits")]
-impl PartialEq for ImplItem {
-    fn eq(&self, other: &Self) -> bool {
-        match (self, other) {
-            (ImplItem::Const(this), ImplItem::Const(other)) => this == other,
-            (ImplItem::Method(this), ImplItem::Method(other)) => this == other,
-            (ImplItem::Type(this), ImplItem::Type(other)) => this == other,
-            (ImplItem::Macro(this), ImplItem::Macro(other)) => this == other,
-            (ImplItem::Verbatim(this), ImplItem::Verbatim(other)) => {
-                TokenStreamHelper(this) == TokenStreamHelper(other)
-            }
-            _ => false,
-        }
-    }
-}
-
-#[cfg(feature = "extra-traits")]
-impl Hash for ImplItem {
-    fn hash<H>(&self, state: &mut H)
-    where
-        H: Hasher,
-    {
-        match self {
-            ImplItem::Const(item) => {
-                state.write_u8(0);
-                item.hash(state);
-            }
-            ImplItem::Method(item) => {
-                state.write_u8(1);
-                item.hash(state);
-            }
-            ImplItem::Type(item) => {
-                state.write_u8(2);
-                item.hash(state);
-            }
-            ImplItem::Macro(item) => {
-                state.write_u8(3);
-                item.hash(state);
-            }
-            ImplItem::Verbatim(item) => {
-                state.write_u8(4);
-                TokenStreamHelper(item).hash(state);
-            }
-            ImplItem::__Nonexhaustive => unreachable!(),
-        }
     }
 }
 
@@ -1152,7 +856,6 @@ impl Receiver {
 #[cfg(feature = "parsing")]
 pub mod parsing {
     use super::*;
-
     use crate::ext::IdentExt;
     use crate::parse::discouraged::Speculative;
     use crate::parse::{Parse, ParseBuffer, ParseStream, Result};
@@ -1172,7 +875,7 @@ pub mod parsing {
             let lookahead = ahead.lookahead1();
             let mut item = if lookahead.peek(Token![fn]) || peek_signature(&ahead) {
                 let vis: Visibility = input.parse()?;
-                let sig = parse_signature(input)?;
+                let sig: Signature = input.parse()?;
                 if input.peek(Token![;]) {
                     input.parse::<Token![;]>()?;
                     Ok(Item::Verbatim(verbatim::between(begin, input)))
@@ -1631,46 +1334,45 @@ pub mod parsing {
             && fork.peek(Token![fn])
     }
 
-    fn parse_signature(input: ParseStream) -> Result<Signature> {
-        let constness: Option<Token![const]> = input.parse()?;
-        let asyncness: Option<Token![async]> = input.parse()?;
-        let unsafety: Option<Token![unsafe]> = input.parse()?;
-        let abi: Option<Abi> = input.parse()?;
-        let fn_token: Token![fn] = input.parse()?;
-        let ident: Ident = input.parse()?;
-        let generics: Generics = input.parse()?;
+    impl Parse for Signature {
+        fn parse(input: ParseStream) -> Result<Self> {
+            let constness: Option<Token![const]> = input.parse()?;
+            let asyncness: Option<Token![async]> = input.parse()?;
+            let unsafety: Option<Token![unsafe]> = input.parse()?;
+            let abi: Option<Abi> = input.parse()?;
+            let fn_token: Token![fn] = input.parse()?;
+            let ident: Ident = input.parse()?;
+            let mut generics: Generics = input.parse()?;
 
-        let content;
-        let paren_token = parenthesized!(content in input);
-        let mut inputs = parse_fn_args(&content)?;
-        let variadic = pop_variadic(&mut inputs);
+            let content;
+            let paren_token = parenthesized!(content in input);
+            let mut inputs = parse_fn_args(&content)?;
+            let variadic = pop_variadic(&mut inputs);
 
-        let output: ReturnType = input.parse()?;
-        let where_clause: Option<WhereClause> = input.parse()?;
+            let output: ReturnType = input.parse()?;
+            generics.where_clause = input.parse()?;
 
-        Ok(Signature {
-            constness,
-            asyncness,
-            unsafety,
-            abi,
-            fn_token,
-            ident,
-            paren_token,
-            inputs,
-            output,
-            variadic,
-            generics: Generics {
-                where_clause,
-                ..generics
-            },
-        })
+            Ok(Signature {
+                constness,
+                asyncness,
+                unsafety,
+                abi,
+                fn_token,
+                ident,
+                paren_token,
+                inputs,
+                output,
+                variadic,
+                generics,
+            })
+        }
     }
 
     impl Parse for ItemFn {
         fn parse(input: ParseStream) -> Result<Self> {
             let outer_attrs = input.call(Attribute::parse_outer)?;
             let vis: Visibility = input.parse()?;
-            let sig = parse_signature(input)?;
+            let sig: Signature = input.parse()?;
             parse_rest_of_fn(input, outer_attrs, vis, sig)
         }
     }
@@ -1881,7 +1583,7 @@ pub mod parsing {
             let lookahead = ahead.lookahead1();
             let mut item = if lookahead.peek(Token![fn]) || peek_signature(&ahead) {
                 let vis: Visibility = input.parse()?;
-                let sig = parse_signature(input)?;
+                let sig: Signature = input.parse()?;
                 if input.peek(token::Brace) {
                     let content;
                     braced!(content in input);
@@ -1954,7 +1656,7 @@ pub mod parsing {
         fn parse(input: ParseStream) -> Result<Self> {
             let attrs = input.call(Attribute::parse_outer)?;
             let vis: Visibility = input.parse()?;
-            let sig = parse_signature(input)?;
+            let sig: Signature = input.parse()?;
             let semi_token: Token![;] = input.parse()?;
             Ok(ForeignItemFn {
                 attrs,
@@ -2448,7 +2150,7 @@ pub mod parsing {
     impl Parse for TraitItemMethod {
         fn parse(input: ParseStream) -> Result<Self> {
             let outer_attrs = input.call(Attribute::parse_outer)?;
-            let sig = parse_signature(input)?;
+            let sig: Signature = input.parse()?;
 
             let lookahead = input.lookahead1();
             let (brace_token, inner_attrs, stmts, semi_token) = if lookahead.peek(token::Brace) {
@@ -2582,7 +2284,7 @@ pub mod parsing {
                         || input.peek3(Token![,])
                         || input.peek3(Token![>]))
                 || input.peek2(Token![const]));
-        let generics: Generics = if has_generics {
+        let mut generics: Generics = if has_generics {
             input.parse()?
         } else {
             Generics::default()
@@ -2598,14 +2300,18 @@ pub mod parsing {
         let trait_ = (|| -> Option<_> {
             let ahead = input.fork();
             let polarity: Option<Token![!]> = ahead.parse().ok()?;
-            let path: Path = ahead.parse().ok()?;
+            let mut path: Path = ahead.parse().ok()?;
+            if path.segments.last().unwrap().arguments.is_empty() && ahead.peek(token::Paren) {
+                let parenthesized = PathArguments::Parenthesized(ahead.parse().ok()?);
+                path.segments.last_mut().unwrap().arguments = parenthesized;
+            }
             let for_token: Token![for] = ahead.parse().ok()?;
             input.advance_to(&ahead);
             Some((polarity, path, for_token))
         })();
 
         let self_ty: Type = input.parse()?;
-        let where_clause: Option<WhereClause> = input.parse()?;
+        generics.where_clause = input.parse()?;
 
         let content;
         let brace_token = braced!(content in input);
@@ -2624,10 +2330,7 @@ pub mod parsing {
                 defaultness,
                 unsafety,
                 impl_token,
-                generics: Generics {
-                    where_clause,
-                    ..generics
-                },
+                generics,
                 trait_,
                 self_ty: Box::new(self_ty),
                 brace_token,
@@ -2745,7 +2448,7 @@ pub mod parsing {
             let mut attrs = input.call(Attribute::parse_outer)?;
             let vis: Visibility = input.parse()?;
             let defaultness: Option<Token![default]> = input.parse()?;
-            let sig = parse_signature(input)?;
+            let sig: Signature = input.parse()?;
 
             let block = if let Some(semi) = input.parse::<Option<Token![;]>>()? {
                 // Accept methods without a body in an impl block because
@@ -2869,13 +2572,11 @@ pub mod parsing {
 #[cfg(feature = "printing")]
 mod printing {
     use super::*;
-
-    use proc_macro2::TokenStream;
-    use quote::{ToTokens, TokenStreamExt};
-
     use crate::attr::FilterAttrs;
     use crate::print::TokensOrDefault;
     use crate::punctuated::Pair;
+    use proc_macro2::TokenStream;
+    use quote::{ToTokens, TokenStreamExt};
 
     impl ToTokens for ItemExternCrate {
         fn to_tokens(&self, tokens: &mut TokenStream) {

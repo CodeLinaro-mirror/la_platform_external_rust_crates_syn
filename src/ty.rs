@@ -1,10 +1,6 @@
 use super::*;
 use crate::punctuated::Punctuated;
-#[cfg(feature = "extra-traits")]
-use crate::tt::TokenStreamHelper;
 use proc_macro2::TokenStream;
-#[cfg(feature = "extra-traits")]
-use std::hash::{Hash, Hasher};
 
 ast_enum_of_structs! {
     /// The possible types that a Rust value could have.
@@ -20,7 +16,7 @@ ast_enum_of_structs! {
     //
     // TODO: change syntax-tree-enum link to an intra rustdoc link, currently
     // blocked on https://github.com/rust-lang/rust/issues/62833
-    pub enum Type #manual_extra_traits {
+    pub enum Type {
         /// A fixed size array type: `[T; n]`.
         Array(TypeArray),
 
@@ -240,107 +236,6 @@ ast_struct! {
     }
 }
 
-#[cfg(feature = "extra-traits")]
-impl Eq for Type {}
-
-#[cfg(feature = "extra-traits")]
-impl PartialEq for Type {
-    fn eq(&self, other: &Self) -> bool {
-        match (self, other) {
-            (Type::Array(this), Type::Array(other)) => this == other,
-            (Type::BareFn(this), Type::BareFn(other)) => this == other,
-            (Type::Group(this), Type::Group(other)) => this == other,
-            (Type::ImplTrait(this), Type::ImplTrait(other)) => this == other,
-            (Type::Infer(this), Type::Infer(other)) => this == other,
-            (Type::Macro(this), Type::Macro(other)) => this == other,
-            (Type::Never(this), Type::Never(other)) => this == other,
-            (Type::Paren(this), Type::Paren(other)) => this == other,
-            (Type::Path(this), Type::Path(other)) => this == other,
-            (Type::Ptr(this), Type::Ptr(other)) => this == other,
-            (Type::Reference(this), Type::Reference(other)) => this == other,
-            (Type::Slice(this), Type::Slice(other)) => this == other,
-            (Type::TraitObject(this), Type::TraitObject(other)) => this == other,
-            (Type::Tuple(this), Type::Tuple(other)) => this == other,
-            (Type::Verbatim(this), Type::Verbatim(other)) => {
-                TokenStreamHelper(this) == TokenStreamHelper(other)
-            }
-            _ => false,
-        }
-    }
-}
-
-#[cfg(feature = "extra-traits")]
-impl Hash for Type {
-    fn hash<H>(&self, hash: &mut H)
-    where
-        H: Hasher,
-    {
-        match self {
-            Type::Array(ty) => {
-                hash.write_u8(0);
-                ty.hash(hash);
-            }
-            Type::BareFn(ty) => {
-                hash.write_u8(1);
-                ty.hash(hash);
-            }
-            Type::Group(ty) => {
-                hash.write_u8(2);
-                ty.hash(hash);
-            }
-            Type::ImplTrait(ty) => {
-                hash.write_u8(3);
-                ty.hash(hash);
-            }
-            Type::Infer(ty) => {
-                hash.write_u8(4);
-                ty.hash(hash);
-            }
-            Type::Macro(ty) => {
-                hash.write_u8(5);
-                ty.hash(hash);
-            }
-            Type::Never(ty) => {
-                hash.write_u8(6);
-                ty.hash(hash);
-            }
-            Type::Paren(ty) => {
-                hash.write_u8(7);
-                ty.hash(hash);
-            }
-            Type::Path(ty) => {
-                hash.write_u8(8);
-                ty.hash(hash);
-            }
-            Type::Ptr(ty) => {
-                hash.write_u8(9);
-                ty.hash(hash);
-            }
-            Type::Reference(ty) => {
-                hash.write_u8(10);
-                ty.hash(hash);
-            }
-            Type::Slice(ty) => {
-                hash.write_u8(11);
-                ty.hash(hash);
-            }
-            Type::TraitObject(ty) => {
-                hash.write_u8(12);
-                ty.hash(hash);
-            }
-            Type::Tuple(ty) => {
-                hash.write_u8(13);
-                ty.hash(hash);
-            }
-            Type::Verbatim(ty) => {
-                hash.write_u8(14);
-                TokenStreamHelper(ty).hash(hash);
-            }
-            Type::__Nonexhaustive => unreachable!(),
-        }
-    }
-}
-
 ast_struct! {
     /// The binary interface of a function: `extern "C"`.
     ///
@@ -403,7 +298,6 @@ ast_enum! {
 #[cfg(feature = "parsing")]
 pub mod parsing {
     use super::*;
-
     use crate::ext::IdentExt;
     use crate::parse::{Parse, ParseStream, Result};
     use crate::path;
@@ -1069,12 +963,10 @@ pub mod parsing {
 #[cfg(feature = "printing")]
 mod printing {
     use super::*;
-
-    use proc_macro2::TokenStream;
-    use quote::{ToTokens, TokenStreamExt};
-
     use crate::attr::FilterAttrs;
     use crate::print::TokensOrDefault;
+    use proc_macro2::TokenStream;
+    use quote::{ToTokens, TokenStreamExt};
 
     impl ToTokens for TypeSlice {
         fn to_tokens(&self, tokens: &mut TokenStream) {

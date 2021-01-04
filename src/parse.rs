@@ -189,6 +189,17 @@
 #[path = "discouraged.rs"]
 pub mod discouraged;
 
+use crate::buffer::{Cursor, TokenBuffer};
+use crate::error;
+use crate::lookahead;
+#[cfg(all(
+    not(all(target_arch = "wasm32", any(target_os = "unknown", target_os = "wasi"))),
+    feature = "proc-macro"
+))]
+use crate::proc_macro;
+use crate::punctuated::Punctuated;
+use crate::token::Token;
+use proc_macro2::{self, Delimiter, Group, Literal, Punct, Span, TokenStream, TokenTree};
 use std::cell::Cell;
 use std::fmt::{self, Debug, Display};
 use std::marker::PhantomData;
@@ -196,19 +207,6 @@ use std::mem;
 use std::ops::Deref;
 use std::rc::Rc;
 use std::str::FromStr;
-
-#[cfg(all(
-    not(all(target_arch = "wasm32", any(target_os = "unknown", target_os = "wasi"))),
-    feature = "proc-macro"
-))]
-use crate::proc_macro;
-use proc_macro2::{self, Delimiter, Group, Literal, Punct, Span, TokenStream, TokenTree};
-
-use crate::buffer::{Cursor, TokenBuffer};
-use crate::error;
-use crate::lookahead;
-use crate::punctuated::Punctuated;
-use crate::token::Token;
 
 pub use crate::error::{Error, Result};
 pub use crate::lookahead::{Lookahead1, Peek};
@@ -336,7 +334,6 @@ impl<'a> Debug for ParseBuffer<'a> {
 /// #     .unwrap();
 /// # assert_eq!(remainder.to_string(), "b c");
 /// ```
-#[derive(Copy, Clone)]
 pub struct StepCursor<'c, 'a> {
     scope: Span,
     // This field is covariant in 'c.
@@ -357,6 +354,14 @@ impl<'c, 'a> Deref for StepCursor<'c, 'a> {
 
     fn deref(&self) -> &Self::Target {
         &self.cursor
+    }
+}
+
+impl<'c, 'a> Copy for StepCursor<'c, 'a> {}
+
+impl<'c, 'a> Clone for StepCursor<'c, 'a> {
+    fn clone(&self) -> Self {
+        *self
     }
 }
 
@@ -393,7 +398,6 @@ pub(crate) fn new_parse_buffer(
     }
 }
 
-#[derive(Clone)]
 pub(crate) enum Unexpected {
     None,
     Some(Span),
@@ -403,6 +407,16 @@ pub(crate) enum Unexpected {
 impl Default for Unexpected {
     fn default() -> Self {
         Unexpected::None
+    }
+}
+
+impl Clone for Unexpected {
+    fn clone(&self) -> Self {
+        match self {
+            Unexpected::None => Unexpected::None,
+            Unexpected::Some(span) => Unexpected::Some(*span),
+            Unexpected::Chain(next) => Unexpected::Chain(next.clone()),
+        }
     }
 }
 

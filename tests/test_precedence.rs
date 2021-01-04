@@ -18,21 +18,19 @@ extern crate rustc_ast;
 extern crate rustc_data_structures;
 extern crate rustc_span;
 
+use crate::common::eq::SpanlessEq;
+use crate::common::parse;
 use quote::quote;
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
 use regex::Regex;
 use rustc_ast::ast;
 use rustc_ast::ptr::P;
 use rustc_span::edition::Edition;
-use walkdir::{DirEntry, WalkDir};
-
 use std::fs::File;
 use std::io::Read;
 use std::process;
 use std::sync::atomic::{AtomicUsize, Ordering};
-
-use common::eq::SpanlessEq;
-use common::parse;
+use walkdir::{DirEntry, WalkDir};
 
 #[macro_use]
 mod macros;
@@ -156,7 +154,7 @@ fn test_expressions(edition: Edition, exprs: Vec<syn::Expr>) -> (usize, usize) {
     let mut passed = 0;
     let mut failed = 0;
 
-    rustc_ast::with_session_globals(edition, || {
+    rustc_span::with_session_globals(edition, || {
         for expr in exprs {
             let raw = quote!(#expr).to_string();
 
@@ -349,6 +347,17 @@ fn syn_brackets(syn_expr: syn::Expr) -> syn::Expr {
                 // Don't wrap const generic arg as that's invalid syntax.
                 GenericArgument::Const(a) => GenericArgument::Const(fold_expr(self, a)),
                 _ => fold_generic_argument(self, arg),
+            }
+        }
+
+        fn fold_generic_method_argument(
+            &mut self,
+            arg: GenericMethodArgument,
+        ) -> GenericMethodArgument {
+            match arg {
+                // Don't wrap const generic arg as that's invalid syntax.
+                GenericMethodArgument::Const(a) => GenericMethodArgument::Const(fold_expr(self, a)),
+                _ => fold_generic_method_argument(self, arg),
             }
         }
 

@@ -3,7 +3,6 @@ ast_enum! {
     ///
     /// *This type is available only if Syn is built with the `"derive"` or `"full"`
     /// feature.*
-    #[cfg_attr(feature = "clone-impls", derive(Copy))]
     pub enum BinOp {
         /// The `+` operator (addition)
         Add(Token![+]),
@@ -69,7 +68,6 @@ ast_enum! {
     ///
     /// *This type is available only if Syn is built with the `"derive"` or `"full"`
     /// feature.*
-    #[cfg_attr(feature = "clone-impls", derive(Copy))]
     pub enum UnOp {
         /// The `*` operator for dereferencing
         Deref(Token![*]),
@@ -83,7 +81,6 @@ ast_enum! {
 #[cfg(feature = "parsing")]
 pub mod parsing {
     use super::*;
-
     use crate::parse::{Parse, ParseStream, Result};
 
     fn parse_binop(input: ParseStream) -> Result<BinOp> {
